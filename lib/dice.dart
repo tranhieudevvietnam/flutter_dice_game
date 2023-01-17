@@ -23,6 +23,8 @@ class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
   ValueNotifier<int> count = ValueNotifier(0);
   final int _milliseconds = 2000;
 
+  List<int> counts = [1, 2, 3, 4, 5, 6];
+
   @override
   void initState() {
     dice = Object(fileName: "assets/dice04/dice.obj", scale: Vector3.all(0.75));
@@ -51,62 +53,72 @@ class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
         child: Stack(
           children: [
             Positioned(
+                top: 0,
+                left: 0,
+                height: MediaQuery.of(context).size.height / 2,
+                width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: listRow(listWidget: [], index: 0),
+                )),
+            Positioned(
               left: 0,
               bottom: 20,
-              height: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.bottom,
+              height: MediaQuery.of(context).size.height / 2,
               width: MediaQuery.of(context).size.width,
-              child: ScaleWidget(
-                animationParentController: _animationController,
-                child: GestureDetector(
-                  onTap: () {
-                    /* 
-                    flow 1:  3-6-4-1 -> chiều dọc
-                    flow 2:  3-2-4-5 -> chiều ngang
-                     >>>>>> cách nhau 90
-                    */
+              child: Container(
+                color: Colors.black,
+                child: ScaleWidget(
+                  animationParentController: _animationController,
+                  child: GestureDetector(
+                    onTap: () {
+                      /* 
+                      flow 1:  3-6-4-1 -> chiều dọc
+                      flow 2:  3-2-4-5 -> chiều ngang
+                       >>>>>> cách nhau 90
+                      */
 
-                    count.value += 1;
-                    if (_timer != null) {
-                      _timer!.cancel();
-                      _timer = null;
-                    }
+                      count.value += 1;
+                      if (_timer != null) {
+                        _timer!.cancel();
+                        _timer = null;
+                      }
 
-                    _timer = Timer(
-                      const Duration(seconds: 1),
-                      () {
-                        _animationController.duration = Duration(
-                            milliseconds:
-                                (_milliseconds * count.value).toInt());
-                        values.setValues(
-                            getRandomNumb() * count.value,
-                            getRandomNumb() * count.value,
-                            getRandomNumb() * count.value);
+                      _timer = Timer(
+                        const Duration(seconds: 1),
+                        () {
+                          _animationController.duration = Duration(
+                              milliseconds:
+                                  (_milliseconds * count.value).toInt());
+                          values.setValues(
+                              getRandomNumb() * count.value,
+                              getRandomNumb() * count.value,
+                              getRandomNumb() * count.value);
 
-                        debugPrint("values: ${values.toString()}");
+                          debugPrint("values: ${values.toString()}");
 
-                        if (_animationController.isDismissed) {
-                          _animationController.forward();
-                        } else {
-                          _animationController.reset();
-                          _animationController.forward();
-                        }
-                        count.value = 0;
-                      },
-                    );
-                  },
-                  child: AnimatedBuilder(
-                    animation: _curvedAnimation,
-                    builder: (context, child) {
-                      return Cube(
-                        interactive: true,
-                        onSceneCreated: (scene) {
-                          scene.camera.zoom = 5;
-                          scene.world.add(dice);
-                          // scene.camera.position.setValues(-50, 0, 0);
+                          if (_animationController.isDismissed) {
+                            _animationController.forward();
+                          } else {
+                            _animationController.reset();
+                            _animationController.forward();
+                          }
+                          count.value = 0;
                         },
                       );
                     },
+                    child: AnimatedBuilder(
+                      animation: _curvedAnimation,
+                      builder: (context, child) {
+                        return Cube(
+                          interactive: true,
+                          onSceneCreated: (scene) {
+                            scene.camera.zoom = 5;
+                            scene.world.add(dice);
+                            // scene.camera.position.setValues(-50, 0, 0);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -161,6 +173,27 @@ class _DiceState extends State<Dice> with SingleTickerProviderStateMixin {
     dice.rotation.setValues(values.x * _curvedAnimation.value,
         values.y * _curvedAnimation.value, values.z * _curvedAnimation.value);
     dice.updateTransform();
+  }
+
+  List<Widget> listRow({required List<Widget> listWidget, required int index}) {
+    List<Widget> listView = [];
+    int i = 0;
+    while (i < counts.length && i < 3) {
+      listView.add(itemWidget("${i + index}"));
+      i++;
+    }
+    listWidget.add(Row(
+      children: listView,
+    ));
+    if (i + index < counts.length) {
+      return listRow(listWidget: listWidget, index: i + index);
+    } else {
+      return listWidget;
+    }
+  }
+
+  Widget itemWidget(String title) {
+    return Expanded(child: Center(child: Text(title)));
   }
 }
 
